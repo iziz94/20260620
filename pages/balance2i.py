@@ -6,11 +6,10 @@ import random
 # 기본 설정
 # =========================
 st.set_page_config(page_title="커리어 게임", page_icon="🎮")
-
 st.title("🎮 성향 → 직업 월드컵")
 
 # =========================
-# 🔥 중요: 초기 상태 안전 설정
+# 상태 초기화
 # =========================
 if "stage" not in st.session_state:
     st.session_state.stage = "quiz"
@@ -20,12 +19,16 @@ if "q_i" not in st.session_state:
     st.session_state.score = {}
 
 if "wc" not in st.session_state:
-    st.session_state.wc = []
+    st.session_state.wc = None
+
+if "wc_i" not in st.session_state:
     st.session_state.wc_i = 0
+
+if "winner" not in st.session_state:
     st.session_state.winner = None
 
 # =========================
-# 성향 종류
+# 성향
 # =========================
 traits = [
     "solo","team","creative","logic",
@@ -34,7 +37,7 @@ traits = [
 ]
 
 # =========================
-# 🎮 성향 밸런스 게임 질문
+# 질문
 # =========================
 questions = [
     ("📚 쉬는 시간", "혼자 쉰다", "친구랑 논다", "solo", "team"),
@@ -45,12 +48,12 @@ questions = [
     ("⚡ 시간 부족", "빠르게 끝냄", "정확하게 함", "speed", "logic"),
     ("👥 발표", "혼자 준비", "팀 준비", "solo", "team"),
     ("🚀 문제 해결", "분석", "도전", "logic", "challenge"),
-    ("🎨 과제 스타일", "정형", "자유", "stability", "creative"),
+    ("🎨 과제", "정형", "자유", "stability", "creative"),
     ("🤝 역할", "도움", "리더", "help", "team"),
 ]
 
 # =========================
-# 🏆 직업 16강
+# 직업
 # =========================
 job_pool = [
     ("소프트웨어 엔지니어", ["logic","solo"]),
@@ -72,13 +75,55 @@ job_pool = [
 ]
 
 # =========================
-# 🎮 1단계: 성향 테스트
+# 🤖 AI 직업 설명 생성 함수
+# =========================
+def ai_job_description(job_name, traits_score):
+    
+    top_traits = sorted(traits_score.items(), key=lambda x: x[1], reverse=True)[:3]
+    top_traits = [t[0] for t in top_traits]
+
+    desc_map = {
+        "solo":"혼자 깊게 집중하는 능력이 뛰어난 성향",
+        "team":"사람들과 협업하며 성과를 내는 성향",
+        "creative":"새로운 아이디어를 만드는 창의적 성향",
+        "logic":"논리적으로 분석하고 해결하는 성향",
+        "freedom":"자유로운 환경에서 능력이 올라가는 성향",
+        "stability":"안정적인 환경에서 꾸준히 성장하는 성향",
+        "challenge":"도전을 즐기고 성장하는 성향",
+        "speed":"빠른 판단과 실행력이 강한 성향",
+        "help":"다른 사람을 돕는 데서 만족을 느끼는 성향"
+    }
+
+    trait_text = " / ".join([desc_map.get(t, "") for t in top_traits])
+
+    return f"""
+📌 {job_name}
+
+🧠 분석 결과:
+{trait_text}
+
+💡 설명:
+이 직업은 당신의 성향과 잘 맞습니다.
+특히 {top_traits[0]} 성향이 강하게 반영됩니다.
+
+🚀 추천 이유:
+당신은 이 분야에서 자연스럽게 성과를 낼 가능성이 높습니다.
+"""
+
+# =========================
+# 🎮 quiz
 # =========================
 if st.session_state.stage == "quiz":
 
-    # 🔥 안전장치 (IndexError 방지 핵심)
     if st.session_state.q_i >= len(questions):
         st.session_state.stage = "wc"
+
+        jobs = [{"name":j[0], "traits":j[1]} for j in job_pool]
+        random.shuffle(jobs)
+
+        st.session_state.wc = jobs
+        st.session_state.wc_i = 0
+
         st.rerun()
 
     q = questions[st.session_state.q_i]
@@ -93,44 +138,28 @@ if st.session_state.stage == "quiz":
     if col1.button(q[1]):
         st.session_state.score[q[3]] = st.session_state.score.get(q[3], 0) + 1
         st.session_state.q_i += 1
-
-        if st.session_state.q_i >= len(questions):
-            st.session_state.stage = "wc"
-
         st.rerun()
 
     if col2.button(q[2]):
         st.session_state.score[q[4]] = st.session_state.score.get(q[4], 0) + 1
         st.session_state.q_i += 1
-
-        if st.session_state.q_i >= len(questions):
-            st.session_state.stage = "wc"
-
         st.rerun()
 
 # =========================
-# 🏆 2단계: 직업 월드컵
+# 🏆 wc
 # =========================
 elif st.session_state.stage == "wc":
-
-    # 🔥 처음 진입 시 16강 생성
-    if len(st.session_state.wc) == 0:
-        jobs = [{"name":j[0], "traits":j[1]} for j in job_pool]
-        random.shuffle(jobs)
-        st.session_state.wc = jobs
 
     wc = st.session_state.wc
     i = st.session_state.wc_i
 
-    st.subheader("🏆 직업 이상형 월드컵 (16강)")
+    st.subheader("🏆 직업 16강 월드컵")
 
-    # 종료 조건
     if len(wc) == 1:
         st.session_state.winner = wc[0]
         st.session_state.stage = "end"
         st.rerun()
 
-    # 라운드 종료
     if i >= len(wc) - 1:
         wc = wc[:len(wc)//2]
         st.session_state.wc = wc
@@ -139,8 +168,6 @@ elif st.session_state.stage == "wc":
 
     a = wc[i]
     b = wc[i+1]
-
-    st.write("더 끌리는 직업 선택 👇")
 
     col1, col2 = st.columns(2)
 
@@ -155,60 +182,38 @@ elif st.session_state.stage == "wc":
         st.rerun()
 
 # =========================
-# 🧠 3단계: 결과
+# 🎯 결과
 # =========================
 elif st.session_state.stage == "end":
 
-    st.success("🎯 분석 완료!")
+    st.success("🎯 결과 완료!")
 
-    # =========================
-    # 성향 그래프
-    # =========================
     values = [st.session_state.score.get(t, 0) for t in traits]
 
     fig, ax = plt.subplots()
     ax.bar(traits, values, color="#4f46e5")
     st.pyplot(fig)
 
-    # =========================
-    # 성향 설명
-    # =========================
-    st.subheader("🧠 너의 성향")
-
-    explain = {
-        "solo":"혼자 집중형",
-        "team":"협업형",
-        "logic":"논리형",
-        "creative":"창의형",
-        "freedom":"자유형",
-        "stability":"안정형",
-        "challenge":"도전형",
-        "speed":"속도형",
-        "help":"도움형"
-    }
-
-    top = sorted(st.session_state.score.items(), key=lambda x: x[1], reverse=True)[:3]
-
-    for t, _ in top:
-        st.write("👉", explain.get(t))
-
-    # =========================
-    # 🏆 최종 직업
-    # =========================
     st.subheader("🏆 최종 직업")
     st.write(st.session_state.winner["name"])
 
     # =========================
-    # 🔄 다시 시작
+    # 🤖 AI 설명 출력
     # =========================
-    if st.button("🔄 다시 시작"):
+    st.subheader("🤖 AI 직업 분석")
 
+    st.markdown(
+        ai_job_description(
+            st.session_state.winner["name"],
+            st.session_state.score
+        )
+    )
+
+    if st.button("🔄 다시 시작"):
         st.session_state.stage = "quiz"
         st.session_state.q_i = 0
         st.session_state.score = {}
-
-        st.session_state.wc = []
+        st.session_state.wc = None
         st.session_state.wc_i = 0
         st.session_state.winner = None
-
         st.rerun()
