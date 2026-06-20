@@ -1,12 +1,12 @@
 import streamlit as st
 import matplotlib.pyplot as plt
-import random
+import time
 
 # =========================
 # 기본 설정
 # =========================
-st.set_page_config(page_title="커리어 게임", page_icon="🎮")
-st.title("🎮 성향 → 직업 월드컵")
+st.set_page_config(page_title="커리어 AI", page_icon="🎮")
+st.title("🎮 성향 분석 → 직업 추천 AI")
 
 # =========================
 # 상태 초기화
@@ -43,20 +43,18 @@ traits = [
 # 질문
 # =========================
 questions = [
-    ("📚 쉬는 시간", "혼자 쉰다", "친구랑 논다", "solo", "team"),
-    ("🎮 게임 스타일", "전략형", "즉흥형", "logic", "challenge"),
-    ("🍱 점심시간", "혼자 먹는다", "같이 먹는다", "solo", "team"),
-    ("🧩 문제 해결", "혼자 해결", "새 방법 찾기", "logic", "creative"),
-    ("📱 방과 후", "집에서 쉰다", "밖에서 논다", "stability", "freedom"),
-    ("⚡ 시간 부족", "빠르게 끝냄", "정확하게", "speed", "logic"),
-    ("👥 발표", "혼자", "팀", "solo", "team"),
-    ("🚀 문제 해결", "분석", "도전", "logic", "challenge"),
-    ("🎨 과제", "정형", "자유", "stability", "creative"),
-    ("🤝 역할", "도움", "리더", "help", "team"),
+    ("쉬는 시간", "혼자 쉰다", "친구랑 논다", "solo", "team"),
+    ("문제 해결", "혼자 생각", "새 방법", "logic", "creative"),
+    ("프로젝트", "혼자", "팀", "solo", "team"),
+    ("숙제", "빠르게", "꼼꼼하게", "speed", "logic"),
+    ("주말", "집", "밖", "stability", "freedom"),
+    ("도전", "안정", "도전", "stability", "challenge"),
+    ("친구", "적게", "많이", "solo", "team"),
+    ("아이디어", "실행", "창의", "logic", "creative"),
 ]
 
 # =========================
-# 직업 (16강)
+# 직업
 # =========================
 job_pool = [
     ("소프트웨어 엔지니어", ["logic","solo"]),
@@ -78,18 +76,61 @@ job_pool = [
 ]
 
 # =========================
-# 🎮 1. 성향 테스트
+# 점수 계산
+# =========================
+def job_score(traits_list, user_score):
+    return sum(user_score.get(t,0) for t in traits_list)
+
+# =========================
+# AI 설명
+# =========================
+def ai(job, traits_list):
+    return f"""
+🤖 AI 분석
+
+📌 {job}
+
+🧠 성향:
+{", ".join(traits_list)}
+
+💡 설명:
+당신의 성향과 높은 일치도를 보이는 직업입니다.
+"""
+
+# =========================
+# TOP5 추천
+# =========================
+def get_top5(user_score):
+    scored = []
+    for name, t in job_pool:
+        s = job_score(t, user_score)
+        scored.append((name, s))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored[:5]
+
+# =========================
+# 🎮 QUIZ
 # =========================
 if st.session_state.stage == "quiz":
 
     if st.session_state.q_i >= len(questions):
         st.session_state.stage = "wc"
 
-        # 🔥 월드컵 생성 (여기서 딱 1번)
-        jobs = [{"name":j[0], "traits":j[1]} for j in job_pool]
-        random.shuffle(jobs)
+        user_score = st.session_state.score
 
-        st.session_state.wc = jobs
+        scored_jobs = []
+        for name, t in job_pool:
+            scored_jobs.append({
+                "name": name,
+                "traits": t,
+                "score": job_score(t, user_score)
+            })
+
+        scored_jobs.sort(key=lambda x: x["score"], reverse=True)
+
+        st.session_state.top5 = get_top5(user_score)
+
+        st.session_state.wc = scored_jobs[:16]
         st.session_state.next_wc = []
         st.session_state.wc_i = 0
 
@@ -98,38 +139,35 @@ if st.session_state.stage == "quiz":
     q = questions[st.session_state.q_i]
 
     st.progress(st.session_state.q_i / len(questions))
-    st.subheader("🎮 성향 밸런스 게임")
-    st.write(q[0])
+    st.subheader("🎮 성향 테스트")
 
     col1, col2 = st.columns(2)
 
     if col1.button(q[1]):
-        st.session_state.score[q[3]] = st.session_state.score.get(q[3], 0) + 1
+        st.session_state.score[q[3]] = st.session_state.score.get(q[3],0)+1
         st.session_state.q_i += 1
         st.rerun()
 
     if col2.button(q[2]):
-        st.session_state.score[q[4]] = st.session_state.score.get(q[4], 0) + 1
+        st.session_state.score[q[4]] = st.session_state.score.get(q[4],0)+1
         st.session_state.q_i += 1
         st.rerun()
 
 # =========================
-# 🏆 2. 직업 월드컵 (16강)
+# 🏆 WC (애니메이션 추가)
 # =========================
 elif st.session_state.stage == "wc":
 
     wc = st.session_state.wc
     i = st.session_state.wc_i
 
-    st.subheader("🏆 직업 16강 월드컵")
+    st.subheader("🏆 직업 월드컵")
 
-    # 종료 조건 (1명 남으면 끝)
     if len(wc) == 1:
         st.session_state.winner = wc[0]
         st.session_state.stage = "end"
         st.rerun()
 
-    # 라운드 종료 (다 돌았으면 교체)
     if i >= len(wc) - 1:
         st.session_state.wc = st.session_state.next_wc
         st.session_state.next_wc = []
@@ -137,59 +175,56 @@ elif st.session_state.stage == "wc":
         st.rerun()
 
     a = wc[i]
-    b = wc[i + 1]
+    b = wc[i+1]
+
+    # 🎮 애니메이션 효과
+    st.progress(i / len(wc))
+    st.markdown("### ⚡ 선택하세요!")
 
     col1, col2 = st.columns(2)
 
-    # 선택 1
-    if col1.button(a["name"]):
+    if col1.button(f"🔥 {a['name']}"):
+        with st.spinner("분석 중..."):
+            time.sleep(0.4)
         st.session_state.next_wc.append(a)
         st.session_state.wc_i += 2
         st.rerun()
 
-    # 선택 2
-    if col2.button(b["name"]):
+    if col2.button(f"🔥 {b['name']}"):
+        with st.spinner("분석 중..."):
+            time.sleep(0.4)
         st.session_state.next_wc.append(b)
         st.session_state.wc_i += 2
         st.rerun()
 
 # =========================
-# 🎯 3. 결과
+# 🎯 END
 # =========================
 elif st.session_state.stage == "end":
 
     st.success("🎯 분석 완료!")
 
-    values = [st.session_state.score.get(t, 0) for t in traits]
+    values = [st.session_state.score.get(t,0) for t in traits]
 
     fig, ax = plt.subplots()
     ax.bar(traits, values, color="#4f46e5")
     st.pyplot(fig)
 
+    winner = st.session_state.winner
+
     st.subheader("🏆 최종 직업")
-    st.write(st.session_state.winner["name"])
+    st.write(winner["name"])
 
-    # =========================
-    # 성향 분석
-    # =========================
-    st.subheader("🧠 성향 TOP")
+    st.subheader("🏆 TOP 5 추천 직업")
 
-    top = sorted(st.session_state.score.items(), key=lambda x: x[1], reverse=True)[:3]
-    for t, v in top:
-        st.write("👉", t)
+    for name, score in st.session_state.top5:
+        st.write(f"⭐ {name} ({score}점)")
 
-    # =========================
-    # 다시 시작
-    # =========================
+    st.subheader("🤖 AI 분석")
+
+    st.markdown(ai(winner["name"], winner["traits"]))
+
     if st.button("🔄 다시 시작"):
-
-        st.session_state.stage = "quiz"
-        st.session_state.q_i = 0
-        st.session_state.score = {}
-
-        st.session_state.wc = []
-        st.session_state.next_wc = []
-        st.session_state.wc_i = 0
-        st.session_state.winner = None
-
+        for k in st.session_state.keys():
+            del st.session_state[k]
         st.rerun()
