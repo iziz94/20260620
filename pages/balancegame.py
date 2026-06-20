@@ -1,17 +1,21 @@
-
 import streamlit as st
 import matplotlib.pyplot as plt
-import time
+import numpy as np
 
 # =========================
-# 🎨 버튼 애니메이션 CSS
+# 페이지 설정
+# =========================
+st.set_page_config(page_title="커리어 성향 테스트", page_icon="💼")
+
+# =========================
+# CSS
 # =========================
 st.markdown("""
 <style>
 .stButton button {
     width: 100%;
     height: 60px;
-    font-size: 18px;
+    font-size: 16px;
     border-radius: 12px;
     transition: 0.2s;
 }
@@ -25,116 +29,151 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =========================
-# 🧠 MBTI → 고양이
+# 성향 리스트
 # =========================
-mbti_cat = {
-    "INTJ":"https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
-    "INTP":"https://images.unsplash.com/photo-1533738363-b7f9aef128ce",
-    "ENTJ":"https://images.unsplash.com/photo-1543852786-1cf6624b9987",
-    "ENTP":"https://images.unsplash.com/photo-1543852786-1cf6624b9987",
-
-    "INFJ":"https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
-    "INFP":"https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
-    "ENFJ":"https://images.unsplash.com/photo-1552053831-71594a27632d",
-    "ENFP":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-
-    "ISTJ":"https://images.unsplash.com/photo-1511044568932-338cba0ad803",
-    "ISFJ":"https://images.unsplash.com/photo-1511044568932-338cba0ad803",
-    "ESTJ":"https://images.unsplash.com/photo-1521791136064-7986c2920216",
-    "ESFJ":"https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-
-    "ISTP":"https://images.unsplash.com/photo-1521737604893-d14cc237f11d",
-    "ISFP":"https://images.unsplash.com/photo-1543852786-1cf6624b9987",
-    "ESTP":"https://images.unsplash.com/photo-1508385082359-f38ae991e8f2",
-    "ESFP":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-}
-
-# =========================
-# 🧠 MBTI 로직
-# =========================
-mbti_map = {
-    "INTJ":["logic","solo","structure"],
-    "INTP":["logic","solo","creative"],
-    "ENTJ":["challenge","logic","team"],
-    "ENTP":["creative","challenge","fun"],
-
-    "INFJ":["help","solo","structure"],
-    "INFP":["creative","solo","freedom"],
-    "ENFJ":["help","team","structure"],
-    "ENFP":["creative","freedom","fun"],
-
-    "ISTJ":["stability","structure","logic"],
-    "ISFJ":["help","structure","team"],
-    "ESTJ":["stability","structure","team"],
-    "ESFJ":["team","help","fun"],
-
-    "ISTP":["logic","solo","field"],
-    "ISFP":["creative","solo","freedom"],
-    "ESTP":["speed","challenge","fun"],
-    "ESFP":["fun","team","freedom"],
-}
-
-# =========================
-# 🎮 16문항 밸런스 게임
-# =========================
-questions = [
-    ("혼자 공부 vs 팀 공부", ("혼자","solo"), ("팀","team")),
-    ("안정 vs 도전", ("안정","stability"), ("도전","challenge")),
-    ("창작 vs 논리", ("창작","creative"), ("논리","logic")),
-    ("현장 vs 분석", ("현장","field"), ("분석","logic")),
-    ("도움 vs 기술", ("도움","help"), ("기술","logic")),
-    ("자유 vs 규칙", ("자유","freedom"), ("규칙","stability")),
-    ("빠름 vs 정확", ("빠름","speed"), ("정확","logic")),
-    ("혼자 vs 협업", ("혼자","solo"), ("협업","team")),
-    ("돈 vs 재미", ("돈","stability"), ("재미","fun")),
-    ("아이디어 vs 실행", ("아이디어","creative"), ("실행","logic")),
-    ("연구 vs 소통", ("연구","solo"), ("소통","team")),
-    ("위험 vs 안정", ("위험","challenge"), ("안정","stability")),
-    ("콘텐츠 vs 개발", ("콘텐츠","creative"), ("개발","logic")),
-    ("빠른 판단 vs 신중", ("빠름","speed"), ("신중","logic")),
-    ("자율 vs 조직", ("자율","freedom"), ("조직","stability")),
-    ("혼자 작업 vs 팀 작업", ("혼자","solo"), ("팀","team")),
+traits = [
+    "solo","team","creative","logic","help",
+    "freedom","stability","fun","challenge","speed"
 ]
 
 # =========================
-# 📊 그래프
+# 질문
 # =========================
-def draw_chart(score):
-    fig, ax = plt.subplots()
-    ax.bar(score.keys(), score.values(), color="#4f46e5")
-    plt.xticks(rotation=45)
-    st.pyplot(fig)
+questions = [
+    ("혼자 vs 팀", ("혼자 공부","solo"), ("팀 공부","team")),
+    ("창의 vs 논리", ("창의","creative"), ("논리","logic")),
+    ("안정 vs 도전", ("안정","stability"), ("도전","challenge")),
+    ("자유 vs 규칙", ("자유","freedom"), ("규칙","stability")),
+    ("재미 vs 효율", ("재미","fun"), ("효율","logic")),
+    ("도움 vs 분석", ("도움","help"), ("분석","logic")),
+    ("빠름 vs 정확", ("빠름","speed"), ("정확","logic")),
+    ("혼자 작업 vs 협업", ("혼자","solo"), ("협업","team")),
+]
 
 # =========================
-# 🧠 MBTI 계산
+# 직업 데이터
 # =========================
+job_profiles = {
+    "소프트웨어 엔지니어": {
+        "traits": ["logic", "solo"],
+        "salary": "5000~12000만원",
+        "difficulty": "⭐⭐⭐⭐☆",
+        "desc": "논리 기반으로 시스템과 서비스를 개발하는 직업입니다."
+    },
+    "데이터 사이언티스트": {
+        "traits": ["logic", "solo"],
+        "salary": "6000~13000만원",
+        "difficulty": "⭐⭐⭐⭐⭐",
+        "desc": "데이터를 분석해 의사결정을 돕는 직업입니다."
+    },
+    "UX/UI 디자이너": {
+        "traits": ["creative"],
+        "salary": "4000~9000만원",
+        "difficulty": "⭐⭐⭐☆☆",
+        "desc": "사용자 경험을 설계하는 디자인 직업입니다."
+    },
+    "프로덕트 매니저": {
+        "traits": ["team", "logic"],
+        "salary": "6000~15000만원",
+        "difficulty": "⭐⭐⭐⭐☆",
+        "desc": "제품 방향과 팀을 조율하는 핵심 역할입니다."
+    },
+    "마케터": {
+        "traits": ["creative", "team", "fun"],
+        "salary": "3500~10000만원",
+        "difficulty": "⭐⭐⭐☆☆",
+        "desc": "브랜드와 제품을 시장에 알리는 직업입니다."
+    },
+    "창업가": {
+        "traits": ["challenge", "freedom", "speed"],
+        "salary": "변동 매우 큼",
+        "difficulty": "⭐⭐⭐⭐⭐",
+        "desc": "새로운 사업을 만들어 성장시키는 직업입니다."
+    },
+    "교사": {
+        "traits": ["help", "stability", "team"],
+        "salary": "3000~6000만원",
+        "difficulty": "⭐⭐⭐⭐☆",
+        "desc": "학생을 교육하고 성장시키는 직업입니다."
+    },
+    "상담사": {
+        "traits": ["help", "team"],
+        "salary": "3000~7000만원",
+        "difficulty": "⭐⭐⭐⭐☆",
+        "desc": "사람들의 심리와 문제를 돕는 직업입니다."
+    },
+}
+
+# =========================
+# 상태 초기화
+# =========================
+if "i" not in st.session_state:
+    st.session_state.i = 0
+    st.session_state.score = {}
+
+if "selected_job" not in st.session_state:
+    st.session_state.selected_job = None
+
+# =========================
+# MBTI (재미용)
+# =========================
+mbti_map = {
+    "INTJ":["logic","solo"],
+    "ENTP":["creative","challenge"],
+    "INFP":["creative","freedom"],
+    "ESTJ":["stability","team"]
+}
+
 def get_mbti(score):
     best, best_score = None, 0
-    for mbti, traits in mbti_map.items():
-        s = sum(score.get(t,0) for t in traits)
+    for mbti, ts in mbti_map.items():
+        s = sum(score.get(t,0) for t in ts)
         if s > best_score:
             best, best_score = mbti, s
     return best or "INFP"
 
 # =========================
-# 상태 초기화
+# 레이더 차트
 # =========================
-st.set_page_config(page_title="밸런스 게임")
+def draw_radar(score):
+    values = [score.get(t, 0) for t in traits]
+    values += values[:1]
 
-st.title("🎮 직업 밸런스 게임 16문항")
+    angles = np.linspace(0, 2*np.pi, len(traits), endpoint=False).tolist()
+    angles += angles[:1]
 
-if "i" not in st.session_state:
-    st.session_state.i = 0
-    st.session_state.score = {}
+    fig = plt.figure()
+    ax = plt.subplot(111, polar=True)
+
+    ax.plot(angles, values, linewidth=2)
+    ax.fill(angles, values, alpha=0.3)
+
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(traits)
+
+    st.pyplot(fig)
+
+# =========================
+# 직업 추천
+# =========================
+def recommend_jobs(score):
+    results = []
+
+    for job, info in job_profiles.items():
+        match = sum(score.get(t, 0) for t in info["traits"])
+        results.append((job, match))
+
+    results.sort(key=lambda x: x[1], reverse=True)
+    return results[:5]
 
 # =========================
 # 질문 화면
 # =========================
+st.title("💼 성향 기반 커리어 테스트")
+
 if st.session_state.i < len(questions):
 
     q = questions[st.session_state.i]
-
-    st.image("https://images.unsplash.com/photo-1521737604893-d14cc237f11d", use_container_width=True)
 
     st.subheader(q[0])
 
@@ -151,48 +190,50 @@ if st.session_state.i < len(questions):
         st.rerun()
 
 # =========================
-# 🎉 결과 애니메이션
+# 결과 화면
 # =========================
 else:
 
-    st.success("🎉 결과 생성 중...")
+    st.success("결과 분석 완료")
 
-    progress = st.progress(0)
-    for i in range(100):
-        time.sleep(0.01)
-        progress.progress(i+1)
-
-    st.balloons()
+    st.subheader("🧠 성향 분석")
+    draw_radar(st.session_state.score)
 
     mbti = get_mbti(st.session_state.score)
-    cat = mbti_cat.get(mbti)
+    st.write(f"🎭 재미 MBTI: {mbti}")
 
-    # fade-in
-    st.markdown("""
-    <style>
-    .fade {animation: fade 1.2s ease-in;}
-    @keyframes fade {
-        from {opacity:0; transform:translateY(20px);}
-        to {opacity:1; transform:translateY(0);}
-    }
-    </style>
-    """, unsafe_allow_html=True)
+    # 직업 추천
+    st.subheader("💼 추천 직업 TOP 5")
 
-    st.markdown('<div class="fade">', unsafe_allow_html=True)
+    top_jobs = recommend_jobs(st.session_state.score)
 
-    st.subheader(f"🧠 MBTI 결과: {mbti}")
+    for job, score in top_jobs:
+        if st.button(f"{job} ({score}점)"):
+            st.session_state.selected_job = job
 
-    draw_chart(st.session_state.score)
+    # =========================
+    # 직업 상세 페이지
+    # =========================
+    if st.session_state.selected_job:
 
-    st.subheader("🐱 당신의 MBTI 고양이")
+        job = st.session_state.selected_job
+        info = job_profiles[job]
 
-    if cat:
-        st.image(cat, use_container_width=True)
-        st.write(f"당신은 **{mbti} 타입 고양이**입니다 🐾")
+        st.markdown("---")
+        st.subheader(f"📌 {job}")
 
-    st.markdown("</div>", unsafe_allow_html=True)
+        st.write(f"🧠 설명: {info['desc']}")
+        st.write(f"💰 연봉: {info['salary']}")
+        st.write(f"📊 난이도: {info['difficulty']}")
+        st.write(f"🔗 성향: {', '.join(info['traits'])}")
 
+        if st.button("⬅ 뒤로가기"):
+            st.session_state.selected_job = None
+            st.rerun()
+
+    # 다시 시작
     if st.button("🔄 다시 시작"):
         st.session_state.i = 0
         st.session_state.score = {}
+        st.session_state.selected_job = None
         st.rerun()
