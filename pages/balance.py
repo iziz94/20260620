@@ -5,7 +5,7 @@ import numpy as np
 # =========================
 # 페이지 설정
 # =========================
-st.set_page_config(page_title="커리어 성향 게임", page_icon="🎮")
+st.set_page_config(page_title="커리어 스토리 게임", page_icon="🎮")
 
 # =========================
 # 스타일
@@ -37,56 +37,48 @@ traits = [
 ]
 
 # =========================
-# 질문 (가중치 + 게임형)
+# 🎮 스토리형 질문
 # =========================
 questions = [
-    {"q":"새 프로젝트를 맡았을 때", "w":2.0,
-     "a":("혼자 구조를 설계한다","solo"),
-     "b":("팀과 계속 협업한다","team")},
+    {"level":1, "story":"📚 새로운 학교에 첫 등교한 날", "q":"너는 어떻게 할까?",
+     "w":2.0,
+     "a":("혼자 조용히 자리 잡는다","solo"),
+     "b":("친구들에게 먼저 다가간다","team")},
 
-    {"q":"문제를 해결할 때", "w":1.8,
-     "a":("논리적으로 분석한다","logic"),
-     "b":("직관과 아이디어로 해결한다","creative")},
+    {"level":2, "story":"🧩 어려운 숙제가 나왔다", "q":"너의 선택은?",
+     "w":1.8,
+     "a":("끝까지 혼자 해결한다","logic"),
+     "b":("새로운 방법을 떠올린다","creative")},
 
-    {"q":"일 선택 기준", "w":1.6,
-     "a":("안정적인 환경","stability"),
-     "b":("성장 가능한 도전","challenge")},
+    {"level":3, "story":"🎮 새로운 게임을 시작했다", "q":"너는?",
+     "w":1.6,
+     "a":("규칙부터 꼼꼼히 본다","stability"),
+     "b":("일단 하면서 배운다","challenge")},
 
-    {"q":"업무 스타일", "w":1.3,
-     "a":("자유롭게 일한다","freedom"),
-     "b":("규칙과 구조 선호","stability")},
+    {"level":4, "story":"🏫 조별 과제가 생겼다", "q":"너는?",
+     "w":1.5,
+     "a":("역할 나눠서 한다","team"),
+     "b":("내가 중심이 되어 한다","solo")},
 
-    {"q":"성과 기준", "w":1.4,
-     "a":("빠른 결과","speed"),
-     "b":("완성도 높은 결과","logic")},
+    {"level":5, "story":"⚡ 문제가 갑자기 생겼다", "q":"너는?",
+     "w":1.4,
+     "a":("원인을 분석한다","logic"),
+     "b":("새 방법을 떠올린다","creative")},
 
-    {"q":"사람들과 일할 때", "w":1.5,
-     "a":("도와주는 역할","help"),
-     "b":("협업 구조 만들기","team")},
+    {"level":6, "story":"⏰ 시간이 부족한 상황", "q":"너는?",
+     "w":1.3,
+     "a":("빠르게 끝낸다","speed"),
+     "b":("천천히 정확하게 한다","logic")},
 
-    {"q":"아이디어 처리 방식", "w":1.2,
-     "a":("창의적으로 확장","creative"),
-     "b":("현실적으로 정리","logic")},
+    {"level":7, "story":"🎨 자유 시간이 생겼다", "q":"너는?",
+     "w":1.2,
+     "a":("혼자 쉰다","solo"),
+     "b":("친구들과 논다","team")},
 
-    {"q":"스트레스 상황", "w":1.0,
-     "a":("혼자 해결","solo"),
-     "b":("함께 해결","team")},
-
-    {"q":"새로운 기술 학습", "w":1.3,
-     "a":("혼자 깊게 탐구","solo"),
-     "b":("사람들과 같이 학습","team")},
-
-    {"q":"회의 스타일", "w":1.2,
-     "a":("빠르게 결정","speed"),
-     "b":("충분한 토론","team")},
-
-    {"q":"문제 발생 시", "w":1.4,
-     "a":("원인 분석","logic"),
-     "b":("새로운 시도","creative")},
-
-    {"q":"업무 만족 기준", "w":1.3,
-     "a":("자유도","freedom"),
-     "b":("안정성","stability")},
+    {"level":8, "story":"🚀 마지막 미션", "q":"너의 선택은?",
+     "w":2.0,
+     "a":("안정적인 길","stability"),
+     "b":("도전적인 길","challenge")},
 ]
 
 # =========================
@@ -97,37 +89,31 @@ job_profiles = {
         "traits": ["logic","solo"],
         "salary": "5000~12000만원",
         "difficulty": "⭐⭐⭐⭐☆",
-        "desc": "시스템과 서비스를 개발하는 직업"
+        "desc": "앱과 시스템을 만드는 직업"
     },
-    "데이터 사이언티스트": {
+    "데이터 분석가": {
         "traits": ["logic","solo"],
         "salary": "6000~13000만원",
         "difficulty": "⭐⭐⭐⭐⭐",
-        "desc": "데이터 분석 전문가"
+        "desc": "데이터를 분석해서 의미를 찾는 직업"
     },
-    "UX/UI 디자이너": {
+    "UX 디자이너": {
         "traits": ["creative"],
         "salary": "4000~9000만원",
         "difficulty": "⭐⭐⭐☆☆",
-        "desc": "사용자 경험 디자인"
-    },
-    "프로덕트 매니저": {
-        "traits": ["team","logic"],
-        "salary": "6000~15000만원",
-        "difficulty": "⭐⭐⭐⭐☆",
-        "desc": "제품 전략 및 팀 조율"
+        "desc": "사용자 경험을 디자인하는 직업"
     },
     "마케터": {
-        "traits": ["creative","team","fun"],
+        "traits": ["creative","team"],
         "salary": "3500~10000만원",
         "difficulty": "⭐⭐⭐☆☆",
-        "desc": "브랜드 전략 전문가"
+        "desc": "사람들에게 제품을 알리는 직업"
     },
-    "창업가": {
-        "traits": ["challenge","freedom","speed"],
-        "salary": "변동",
-        "difficulty": "⭐⭐⭐⭐⭐",
-        "desc": "사업을 만드는 사람"
+    "기획자": {
+        "traits": ["team","logic"],
+        "salary": "5000~14000만원",
+        "difficulty": "⭐⭐⭐⭐☆",
+        "desc": "서비스를 설계하고 팀을 이끄는 직업"
     },
 }
 
@@ -140,46 +126,33 @@ if "i" not in st.session_state:
     st.session_state.selected_job = None
 
 # =========================
-# MBTI (재미용)
-# =========================
-mbti_map = {
-    "INTJ":["logic","solo"],
-    "ENTP":["creative","challenge"],
-    "INFP":["creative","freedom"],
-    "ESTJ":["stability","team"]
-}
-
-def get_mbti(score):
-    best, best_score = None, 0
-    for m, ts in mbti_map.items():
-        s = sum(score.get(t,0) for t in ts)
-        if s > best_score:
-            best, best_score = m, s
-    return best or "INFP"
-
-# =========================
-# AI 성향 설명
+# AI 쉬운 설명
 # =========================
 def explain_personality(score):
+
     sorted_traits = sorted(score.items(), key=lambda x: x[1], reverse=True)
     top = [t[0] for t in sorted_traits[:3]]
 
-    mapping = {
-        "solo":"👉 혼자 집중하며 깊게 사고하는 성향",
-        "team":"👉 사람들과 협업하며 시너지를 내는 성향",
-        "logic":"👉 논리적이고 구조적으로 사고하는 성향",
-        "creative":"👉 창의적이고 아이디어 중심적인 성향",
-        "freedom":"👉 자유로운 환경에서 능력을 발휘하는 성향",
-        "stability":"👉 안정적이고 계획적인 환경 선호",
-        "challenge":"👉 도전을 통해 성장하는 성향",
-        "speed":"👉 빠른 판단과 실행력",
-        "help":"👉 타인을 돕는 것에서 만족",
-        "fun":"👉 재미와 흥미 중심"
+    easy_map = {
+        "solo":"🧍 혼자 있을 때 집중을 잘하고 혼자 하는 일을 좋아해!",
+        "team":"👥 친구들이랑 같이 있을 때 더 힘이 나는 스타일이야!",
+        "logic":"🧠 생각을 차근차근 정리하는 걸 좋아해!",
+        "creative":"💡 새로운 아이디어를 잘 떠올리는 편이야!",
+        "freedom":"🌿 자유로운 환경을 좋아해!",
+        "stability":"📋 안정적인 걸 좋아해!",
+        "challenge":"🔥 어려운 일을 도전처럼 즐겨!",
+        "speed":"⚡ 빠르게 결정하고 행동하는 스타일!",
+        "help":"🤝 다른 사람 도와주는 걸 좋아해!",
+        "fun":"🎉 재미있는 게 가장 중요해!"
     }
 
-    text = "🧠 핵심 성향 분석\n\n"
+    text = "🧠 너의 성향을 쉽게 설명해줄게!\n\n"
+
     for t in top:
-        text += mapping.get(t,"") + "\n\n"
+        text += easy_map.get(t,"") + "\n\n"
+
+    text += "✨ 이건 정답이 아니라 너의 성향이야!"
+
     return text
 
 # =========================
@@ -217,14 +190,9 @@ def recommend_jobs(score):
     return results[:5]
 
 # =========================
-# 캐릭터 이미지
-# =========================
-character_img = "https://images.unsplash.com/photo-1607746882042-944635dfe10e"
-
-# =========================
 # UI 시작
 # =========================
-st.title("🎮 커리어 성향 게임")
+st.title("🎮 커리어 스토리 게임")
 
 # =========================
 # 질문 진행
@@ -233,9 +201,10 @@ if st.session_state.i < len(questions):
 
     q = questions[st.session_state.i]
 
-    st.write(f"Q{st.session_state.i+1}/{len(questions)}")
-    st.progress(st.session_state.i / len(questions))
+    st.write(f"🎮 LEVEL {q['level']}")
+    st.progress((st.session_state.i + 1) / len(questions))
 
+    st.markdown(f"### {q['story']}")
     st.subheader(q["q"])
 
     col1, col2 = st.columns(2)
@@ -255,17 +224,15 @@ if st.session_state.i < len(questions):
 # =========================
 else:
 
-    st.success("🎯 분석 완료")
+    st.success("🎯 분석 완료!")
 
-    # 성향 분석
-    st.subheader("🧠 성향 분석")
+    # 레이더 차트
+    st.subheader("📊 너의 성향 그래프")
     draw_radar(st.session_state.score)
 
-    st.subheader("🤖 AI 성향 설명")
+    # AI 설명
+    st.subheader("🤖 AI 쉬운 설명")
     st.write(explain_personality(st.session_state.score))
-
-    mbti = get_mbti(st.session_state.score)
-    st.write(f"🎭 재미 MBTI: {mbti}")
 
     # 직업 추천
     st.subheader("💼 추천 직업 TOP 5")
@@ -287,7 +254,7 @@ else:
         st.markdown("---")
         st.subheader(f"📌 {job}")
 
-        st.write("🧠", info["desc"])
+        st.write("🧠 설명:", info["desc"])
         st.write("💰 연봉:", info["salary"])
         st.write("📊 난이도:", info["difficulty"])
         st.write("🔗 성향:", info["traits"])
@@ -297,21 +264,10 @@ else:
             st.rerun()
 
     # =========================
-    # 엔딩 캐릭터
+    # 다시 시작
     # =========================
     st.markdown("---")
-    st.subheader("🎁 당신의 커리어 가이드")
 
-    st.image(character_img, use_container_width=True)
-
-    st.write("""
-    당신의 선택을 기반으로 분석한 결과입니다.  
-    이 결과는 정답이 아니라 당신의 가능성을 보여주는 지도입니다.
-    """)
-
-    # =========================
-    # 재시작
-    # =========================
     if st.button("🔄 다시 시작"):
         st.session_state.i = 0
         st.session_state.score = {}
