@@ -37,16 +37,16 @@ traits = [
 ]
 
 # =========================
-# 가중치 질문 (핵심)
+# 질문 (가중치 + 게임형)
 # =========================
 questions = [
     {"q":"새 프로젝트를 맡았을 때", "w":2.0,
-     "a":("혼자 깊게 설계한다","solo"),
+     "a":("혼자 구조를 설계한다","solo"),
      "b":("팀과 계속 협업한다","team")},
 
     {"q":"문제를 해결할 때", "w":1.8,
      "a":("논리적으로 분석한다","logic"),
-     "b":("직관으로 빠르게 해결한다","creative")},
+     "b":("직관과 아이디어로 해결한다","creative")},
 
     {"q":"일 선택 기준", "w":1.6,
      "a":("안정적인 환경","stability"),
@@ -58,11 +58,11 @@ questions = [
 
     {"q":"성과 기준", "w":1.4,
      "a":("빠른 결과","speed"),
-     "b":("완성도","logic")},
+     "b":("완성도 높은 결과","logic")},
 
-    {"q":"사람과 일할 때", "w":1.5,
-     "a":("돕는 역할","help"),
-     "b":("협업 구조","team")},
+    {"q":"사람들과 일할 때", "w":1.5,
+     "a":("도와주는 역할","help"),
+     "b":("협업 구조 만들기","team")},
 
     {"q":"아이디어 처리 방식", "w":1.2,
      "a":("창의적으로 확장","creative"),
@@ -71,10 +71,26 @@ questions = [
     {"q":"스트레스 상황", "w":1.0,
      "a":("혼자 해결","solo"),
      "b":("함께 해결","team")},
+
+    {"q":"새로운 기술 학습", "w":1.3,
+     "a":("혼자 깊게 탐구","solo"),
+     "b":("사람들과 같이 학습","team")},
+
+    {"q":"회의 스타일", "w":1.2,
+     "a":("빠르게 결정","speed"),
+     "b":("충분한 토론","team")},
+
+    {"q":"문제 발생 시", "w":1.4,
+     "a":("원인 분석","logic"),
+     "b":("새로운 시도","creative")},
+
+    {"q":"업무 만족 기준", "w":1.3,
+     "a":("자유도","freedom"),
+     "b":("안정성","stability")},
 ]
 
 # =========================
-# 직업 데이터 (확장)
+# 직업 데이터
 # =========================
 job_profiles = {
     "소프트웨어 엔지니어": {
@@ -87,19 +103,19 @@ job_profiles = {
         "traits": ["logic","solo"],
         "salary": "6000~13000만원",
         "difficulty": "⭐⭐⭐⭐⭐",
-        "desc": "데이터 기반 분석 전문가"
+        "desc": "데이터 분석 전문가"
     },
     "UX/UI 디자이너": {
         "traits": ["creative"],
         "salary": "4000~9000만원",
         "difficulty": "⭐⭐⭐☆☆",
-        "desc": "사용자 경험을 설계하는 직업"
+        "desc": "사용자 경험 디자인"
     },
     "프로덕트 매니저": {
         "traits": ["team","logic"],
         "salary": "6000~15000만원",
         "difficulty": "⭐⭐⭐⭐☆",
-        "desc": "제품 방향과 팀을 조율"
+        "desc": "제품 전략 및 팀 조율"
     },
     "마케터": {
         "traits": ["creative","team","fun"],
@@ -112,12 +128,6 @@ job_profiles = {
         "salary": "변동",
         "difficulty": "⭐⭐⭐⭐⭐",
         "desc": "사업을 만드는 사람"
-    },
-    "교사": {
-        "traits": ["help","stability","team"],
-        "salary": "3000~6000만원",
-        "difficulty": "⭐⭐⭐⭐☆",
-        "desc": "교육 전문가"
     },
 }
 
@@ -146,6 +156,31 @@ def get_mbti(score):
         if s > best_score:
             best, best_score = m, s
     return best or "INFP"
+
+# =========================
+# AI 성향 설명
+# =========================
+def explain_personality(score):
+    sorted_traits = sorted(score.items(), key=lambda x: x[1], reverse=True)
+    top = [t[0] for t in sorted_traits[:3]]
+
+    mapping = {
+        "solo":"👉 혼자 집중하며 깊게 사고하는 성향",
+        "team":"👉 사람들과 협업하며 시너지를 내는 성향",
+        "logic":"👉 논리적이고 구조적으로 사고하는 성향",
+        "creative":"👉 창의적이고 아이디어 중심적인 성향",
+        "freedom":"👉 자유로운 환경에서 능력을 발휘하는 성향",
+        "stability":"👉 안정적이고 계획적인 환경 선호",
+        "challenge":"👉 도전을 통해 성장하는 성향",
+        "speed":"👉 빠른 판단과 실행력",
+        "help":"👉 타인을 돕는 것에서 만족",
+        "fun":"👉 재미와 흥미 중심"
+    }
+
+    text = "🧠 핵심 성향 분석\n\n"
+    for t in top:
+        text += mapping.get(t,"") + "\n\n"
+    return text
 
 # =========================
 # 레이더 차트
@@ -182,6 +217,11 @@ def recommend_jobs(score):
     return results[:5]
 
 # =========================
+# 캐릭터 이미지
+# =========================
+character_img = "https://images.unsplash.com/photo-1607746882042-944635dfe10e"
+
+# =========================
 # UI 시작
 # =========================
 st.title("🎮 커리어 성향 게임")
@@ -215,15 +255,20 @@ if st.session_state.i < len(questions):
 # =========================
 else:
 
-    st.success("분석 완료")
+    st.success("🎯 분석 완료")
 
+    # 성향 분석
     st.subheader("🧠 성향 분석")
     draw_radar(st.session_state.score)
+
+    st.subheader("🤖 AI 성향 설명")
+    st.write(explain_personality(st.session_state.score))
 
     mbti = get_mbti(st.session_state.score)
     st.write(f"🎭 재미 MBTI: {mbti}")
 
-    st.subheader("💼 직업 추천 TOP 5")
+    # 직업 추천
+    st.subheader("💼 추천 직업 TOP 5")
 
     top_jobs = recommend_jobs(st.session_state.score)
 
@@ -240,7 +285,7 @@ else:
         info = job_profiles[job]
 
         st.markdown("---")
-        st.subheader(job)
+        st.subheader(f"📌 {job}")
 
         st.write("🧠", info["desc"])
         st.write("💰 연봉:", info["salary"])
@@ -251,7 +296,22 @@ else:
             st.session_state.selected_job = None
             st.rerun()
 
+    # =========================
+    # 엔딩 캐릭터
+    # =========================
+    st.markdown("---")
+    st.subheader("🎁 당신의 커리어 가이드")
+
+    st.image(character_img, use_container_width=True)
+
+    st.write("""
+    당신의 선택을 기반으로 분석한 결과입니다.  
+    이 결과는 정답이 아니라 당신의 가능성을 보여주는 지도입니다.
+    """)
+
+    # =========================
     # 재시작
+    # =========================
     if st.button("🔄 다시 시작"):
         st.session_state.i = 0
         st.session_state.score = {}
