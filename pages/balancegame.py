@@ -3,14 +3,15 @@ import matplotlib.pyplot as plt
 import time
 
 # =========================
-# 🎨 버튼 애니메이션 CSS
+# 🎨 CSS (이미지 확대 + 버튼 애니메이션)
 # =========================
 st.markdown("""
 <style>
+/* 버튼 */
 .stButton button {
     width: 100%;
-    height: 60px;
-    font-size: 18px;
+    height: 55px;
+    font-size: 16px;
     border-radius: 12px;
     transition: 0.2s;
 }
@@ -19,6 +20,17 @@ st.markdown("""
     transform: scale(1.05);
     background-color: #4f46e5;
     color: white;
+}
+
+/* 이미지 hover 확대 */
+img {
+    border-radius: 12px;
+    transition: 0.3s;
+}
+
+img:hover {
+    transform: scale(1.05);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.2);
 }
 </style>
 """, unsafe_allow_html=True)
@@ -31,20 +43,9 @@ mbti_cat = {
     "INTP":"https://images.unsplash.com/photo-1533738363-b7f9aef128ce",
     "ENTJ":"https://images.unsplash.com/photo-1543852786-1cf6624b9987",
     "ENTP":"https://images.unsplash.com/photo-1543852786-1cf6624b9987",
-
     "INFJ":"https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
     "INFP":"https://images.unsplash.com/photo-1518791841217-8f162f1e1131",
-    "ENFJ":"https://images.unsplash.com/photo-1552053831-71594a27632d",
     "ENFP":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-
-    "ISTJ":"https://images.unsplash.com/photo-1511044568932-338cba0ad803",
-    "ISFJ":"https://images.unsplash.com/photo-1511044568932-338cba0ad803",
-    "ESTJ":"https://images.unsplash.com/photo-1521791136064-7986c2920216",
-    "ESFJ":"https://images.unsplash.com/photo-1522202176988-66273c2fd55f",
-
-    "ISTP":"https://images.unsplash.com/photo-1521737604893-d14cc237f11d",
-    "ISFP":"https://images.unsplash.com/photo-1543852786-1cf6624b9987",
-    "ESTP":"https://images.unsplash.com/photo-1508385082359-f38ae991e8f2",
     "ESFP":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
 }
 
@@ -56,43 +57,63 @@ mbti_map = {
     "INTP":["logic","solo","creative"],
     "ENTJ":["challenge","logic","team"],
     "ENTP":["creative","challenge","fun"],
-
     "INFJ":["help","solo","structure"],
     "INFP":["creative","solo","freedom"],
-    "ENFJ":["help","team","structure"],
     "ENFP":["creative","freedom","fun"],
-
+    "ESFP":["fun","team","freedom"],
     "ISTJ":["stability","structure","logic"],
     "ISFJ":["help","structure","team"],
     "ESTJ":["stability","structure","team"],
     "ESFJ":["team","help","fun"],
-
     "ISTP":["logic","solo","field"],
     "ISFP":["creative","solo","freedom"],
     "ESTP":["speed","challenge","fun"],
-    "ESFP":["fun","team","freedom"],
 }
 
 # =========================
-# 🎮 16문항 밸런스 게임
+# 🎮 16문항 밸런스 게임 (이미지 2개 구조)
 # =========================
 questions = [
-    ("혼자 공부 vs 팀 공부", ("혼자","solo"), ("팀","team")),
-    ("안정 vs 도전", ("안정","stability"), ("도전","challenge")),
-    ("창작 vs 논리", ("창작","creative"), ("논리","logic")),
-    ("현장 vs 분석", ("현장","field"), ("분석","logic")),
-    ("도움 vs 기술", ("도움","help"), ("기술","logic")),
-    ("자유 vs 규칙", ("자유","freedom"), ("규칙","stability")),
-    ("빠름 vs 정확", ("빠름","speed"), ("정확","logic")),
-    ("혼자 vs 협업", ("혼자","solo"), ("협업","team")),
-    ("돈 vs 재미", ("돈","stability"), ("재미","fun")),
-    ("아이디어 vs 실행", ("아이디어","creative"), ("실행","logic")),
-    ("연구 vs 소통", ("연구","solo"), ("소통","team")),
-    ("위험 vs 안정", ("위험","challenge"), ("안정","stability")),
-    ("콘텐츠 vs 개발", ("콘텐츠","creative"), ("개발","logic")),
-    ("빠른 판단 vs 신중", ("빠름","speed"), ("신중","logic")),
-    ("자율 vs 조직", ("자율","freedom"), ("조직","stability")),
-    ("혼자 작업 vs 팀 작업", ("혼자","solo"), ("팀","team")),
+    {
+        "q":"혼자 집중 vs 팀 협업",
+        "a":{"text":"혼자 공부","tag":"solo","img":"https://images.unsplash.com/photo-1521737604893-d14cc237f11d"},
+        "b":{"text":"팀 공부","tag":"team","img":"https://images.unsplash.com/photo-1522202176988-66273c2fd55f"}
+    },
+    {
+        "q":"안정 vs 도전",
+        "a":{"text":"안정","tag":"stability","img":"https://images.unsplash.com/photo-1521791136064-7986c2920216"},
+        "b":{"text":"도전","tag":"challenge","img":"https://images.unsplash.com/photo-1517694712202-14dd9538aa97"}
+    },
+    {
+        "q":"창작 vs 논리",
+        "a":{"text":"창작","tag":"creative","img":"https://images.unsplash.com/photo-1513364776144-60967b0f800f"},
+        "b":{"text":"논리","tag":"logic","img":"https://images.unsplash.com/photo-1555066931-4365d14bab8c"}
+    },
+    {
+        "q":"사람 돕기 vs 기술 발전",
+        "a":{"text":"사람 돕기","tag":"help","img":"https://images.unsplash.com/photo-1526256262350-7da7584cf5eb"},
+        "b":{"text":"기술 발전","tag":"logic","img":"https://images.unsplash.com/photo-1518770660439-4636190af475"}
+    },
+    {
+        "q":"자유 vs 규칙",
+        "a":{"text":"자유","tag":"freedom","img":"https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"},
+        "b":{"text":"규칙","tag":"stability","img":"https://images.unsplash.com/photo-1521791136064-7986c2920216"}
+    },
+    {
+        "q":"빠름 vs 정확",
+        "a":{"text":"빠름","tag":"speed","img":"https://images.unsplash.com/photo-1508385082359-f38ae991e8f2"},
+        "b":{"text":"정확","tag":"logic","img":"https://images.unsplash.com/photo-1523966211575-eb4a01e7dd51"}
+    },
+    {
+        "q":"혼자 vs 협업",
+        "a":{"text":"혼자","tag":"solo","img":"https://images.unsplash.com/photo-1518770660439-4636190af475"},
+        "b":{"text":"협업","tag":"team","img":"https://images.unsplash.com/photo-1522202176988-66273c2fd55f"}
+    },
+    {
+        "q":"재미 vs 돈",
+        "a":{"text":"재미","tag":"fun","img":"https://images.unsplash.com/photo-1520975922284-7c4d3c7c8c63"},
+        "b":{"text":"돈","tag":"stability","img":"https://images.unsplash.com/photo-1554224154-22dec7ec8818"}
+    },
 ]
 
 # =========================
@@ -116,11 +137,29 @@ def get_mbti(score):
     return best or "INFP"
 
 # =========================
+# 🤖 이미지 설명 AI (룰 기반)
+# =========================
+def explain(tag):
+    ai = {
+        "solo":"혼자 집중하는 성향이 강합니다. 독립적인 작업을 선호해요.",
+        "team":"협업을 좋아하고 사람들과 함께 성장하는 타입입니다.",
+        "creative":"창의적인 아이디어를 중요하게 생각합니다.",
+        "logic":"논리적이고 분석적인 사고를 합니다.",
+        "help":"다른 사람을 돕는 것에서 만족을 느낍니다.",
+        "freedom":"자유로운 환경에서 능력이 발휘됩니다.",
+        "stability":"안정적이고 계획적인 환경을 선호합니다.",
+        "fun":"재미와 흥미를 중요하게 생각합니다.",
+        "challenge":"도전을 즐기고 성장 욕구가 강합니다.",
+        "speed":"빠른 판단과 실행력을 가지고 있습니다."
+    }
+    return ai.get(tag,"이 선택은 당신의 성향을 보여줍니다.")
+
+# =========================
 # 상태 초기화
 # =========================
-st.set_page_config(page_title="밸런스 게임")
+st.set_page_config(page_title="밸런스 게임 AI")
 
-st.title("🎮 직업 밸런스 게임 16문항")
+st.title("🎮 직업 밸런스 게임 + AI 분석")
 
 if "i" not in st.session_state:
     st.session_state.i = 0
@@ -133,28 +172,32 @@ if st.session_state.i < len(questions):
 
     q = questions[st.session_state.i]
 
-    st.image("https://images.unsplash.com/photo-1521737604893-d14cc237f11d", use_container_width=True)
-
-    st.subheader(q[0])
+    st.subheader(q["q"])
 
     col1, col2 = st.columns(2)
 
-    if col1.button(q[1][0]):
-        st.session_state.score[q[1][1]] = st.session_state.score.get(q[1][1],0)+1
-        st.session_state.i += 1
-        st.rerun()
+    with col1:
+        st.image(q["a"]["img"], use_container_width=True)
+        if st.button(q["a"]["text"]):
+            st.session_state.score[q["a"]["tag"]] = st.session_state.score.get(q["a"]["tag"],0)+1
+            st.session_state.last = q["a"]["tag"]
+            st.session_state.i += 1
+            st.rerun()
 
-    if col2.button(q[2][0]):
-        st.session_state.score[q[2][1]] = st.session_state.score.get(q[2][1],0)+1
-        st.session_state.i += 1
-        st.rerun()
+    with col2:
+        st.image(q["b"]["img"], use_container_width=True)
+        if st.button(q["b"]["text"]):
+            st.session_state.score[q["b"]["tag"]] = st.session_state.score.get(q["b"]["tag"],0)+1
+            st.session_state.last = q["b"]["tag"]
+            st.session_state.i += 1
+            st.rerun()
 
 # =========================
-# 🎉 결과 애니메이션
+# 🎉 결과 + 애니메이션 + AI 설명
 # =========================
 else:
 
-    st.success("🎉 결과 생성 중...")
+    st.success("🎉 결과 분석 중...")
 
     progress = st.progress(0)
     for i in range(100):
@@ -164,9 +207,8 @@ else:
     st.balloons()
 
     mbti = get_mbti(st.session_state.score)
-    cat = mbti_cat.get(mbti)
 
-    # fade-in
+    # fade-in 효과
     st.markdown("""
     <style>
     .fade {animation: fade 1.2s ease-in;}
@@ -183,15 +225,20 @@ else:
 
     draw_chart(st.session_state.score)
 
-    st.subheader("🐱 당신의 MBTI 고양이")
+    # 🧠 AI 설명
+    st.subheader("🤖 선택 분석 AI")
+    if "last" in st.session_state:
+        st.write(explain(st.session_state.last))
 
-    if cat:
-        st.image(cat, use_container_width=True)
-        st.write(f"당신은 **{mbti} 타입 고양이**입니다 🐾")
+    # 🐱 고양이
+    st.subheader("🐱 당신의 MBTI 고양이")
+    if mbti in mbti_cat:
+        st.image(mbti_cat[mbti], use_container_width=True)
 
     st.markdown("</div>", unsafe_allow_html=True)
 
     if st.button("🔄 다시 시작"):
         st.session_state.i = 0
         st.session_state.score = {}
+        st.session_state.last = None
         st.rerun()
