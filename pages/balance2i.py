@@ -3,11 +3,26 @@ import matplotlib.pyplot as plt
 import random
 
 # =========================
-# 설정
+# 기본 설정
 # =========================
 st.set_page_config(page_title="커리어 게임", page_icon="🎮")
 
 st.title("🎮 성향 → 직업 월드컵")
+
+# =========================
+# 🔥 중요: 초기 상태 안전 설정
+# =========================
+if "stage" not in st.session_state:
+    st.session_state.stage = "quiz"
+
+if "q_i" not in st.session_state:
+    st.session_state.q_i = 0
+    st.session_state.score = {}
+
+if "wc" not in st.session_state:
+    st.session_state.wc = []
+    st.session_state.wc_i = 0
+    st.session_state.winner = None
 
 # =========================
 # 성향 종류
@@ -19,17 +34,17 @@ traits = [
 ]
 
 # =========================
-# 🎮 성향 질문 (밸런스 게임)
+# 🎮 성향 밸런스 게임 질문
 # =========================
 questions = [
     ("📚 쉬는 시간", "혼자 쉰다", "친구랑 논다", "solo", "team"),
     ("🎮 게임 스타일", "전략형", "즉흥형", "logic", "challenge"),
     ("🍱 점심시간", "혼자 먹는다", "같이 먹는다", "solo", "team"),
-    ("🧩 문제 해결", "끝까지 혼자", "새 방법 찾기", "logic", "creative"),
+    ("🧩 문제 해결", "혼자 끝까지", "새 방법 찾기", "logic", "creative"),
     ("📱 방과 후", "집에서 쉰다", "밖에서 논다", "stability", "freedom"),
     ("⚡ 시간 부족", "빠르게 끝냄", "정확하게 함", "speed", "logic"),
     ("👥 발표", "혼자 준비", "팀 준비", "solo", "team"),
-    ("🚀 어려운 문제", "분석", "도전", "logic", "challenge"),
+    ("🚀 문제 해결", "분석", "도전", "logic", "challenge"),
     ("🎨 과제 스타일", "정형", "자유", "stability", "creative"),
     ("🤝 역할", "도움", "리더", "help", "team"),
 ]
@@ -57,28 +72,11 @@ job_pool = [
 ]
 
 # =========================
-# 상태 초기화
-# =========================
-if "stage" not in st.session_state:
-    st.session_state.stage = "quiz"
-
-if "q_i" not in st.session_state:
-    st.session_state.q_i = 0
-    st.session_state.score = {}
-
-if "wc" not in st.session_state:
-    jobs = [{"name":j[0], "traits":j[1]} for j in job_pool]
-    random.shuffle(jobs)
-    st.session_state.wc = jobs
-    st.session_state.wc_i = 0
-    st.session_state.winner = None
-
-# =========================
 # 🎮 1단계: 성향 테스트
 # =========================
 if st.session_state.stage == "quiz":
 
-    # ✅ 안전장치 (IndexError 방지 핵심)
+    # 🔥 안전장치 (IndexError 방지 핵심)
     if st.session_state.q_i >= len(questions):
         st.session_state.stage = "wc"
         st.rerun()
@@ -115,18 +113,24 @@ if st.session_state.stage == "quiz":
 # =========================
 elif st.session_state.stage == "wc":
 
+    # 🔥 처음 진입 시 16강 생성
+    if len(st.session_state.wc) == 0:
+        jobs = [{"name":j[0], "traits":j[1]} for j in job_pool]
+        random.shuffle(jobs)
+        st.session_state.wc = jobs
+
     wc = st.session_state.wc
     i = st.session_state.wc_i
 
     st.subheader("🏆 직업 이상형 월드컵 (16강)")
 
-    # 종료
+    # 종료 조건
     if len(wc) == 1:
         st.session_state.winner = wc[0]
         st.session_state.stage = "end"
         st.rerun()
 
-    # 라운드 종료 처리
+    # 라운드 종료
     if i >= len(wc) - 1:
         wc = wc[:len(wc)//2]
         st.session_state.wc = wc
@@ -203,10 +207,7 @@ elif st.session_state.stage == "end":
         st.session_state.q_i = 0
         st.session_state.score = {}
 
-        jobs = [{"name":j[0], "traits":j[1]} for j in job_pool]
-        random.shuffle(jobs)
-
-        st.session_state.wc = jobs
+        st.session_state.wc = []
         st.session_state.wc_i = 0
         st.session_state.winner = None
 
