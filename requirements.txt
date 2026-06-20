@@ -4,4 +4,3 @@ pandas
 requests
 pydeck
 matplotlib
-random
